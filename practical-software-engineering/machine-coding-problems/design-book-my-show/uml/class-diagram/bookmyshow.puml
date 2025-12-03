@@ -1,0 +1,166 @@
+@startuml
+
+	abstract class BaseModel {
+		- id: long
+		- createdAt: LocalDateTime
+		- updatedAt: LocalDateTime
+	}
+
+    class City extends BaseModel {
+        - name: String
+    }
+
+	class Address extends BaseModel {
+		- line1: String
+		- line2: String
+		- city: City
+		- state: String
+		- zipCode: String
+		- country: String
+	}
+
+	class Theater extends BaseModel {
+		- name: String
+		- address: Address
+	}
+
+	Theater --> Address
+	Address --> City
+	City "1" --> "many" Theater
+
+	enum Feature {
+		TWO_D, THREE_D, DOLBY_IMAX, DOLBY_VISION
+	}
+
+	enum SeatType {
+		SILVER, GOLD, PLATINUM
+	}
+
+	class Seat extends BaseModel {
+		- type : SeatType
+		- number: int
+		- row: char
+	}
+
+	Seat --> SeatType
+
+	class Screen extends BaseModel {
+		- name: String
+		- feature: Feature
+		- seats: List<Seat>
+	}
+
+	Screen *-- Seat
+	Screen --> Feature
+
+	class ShowPricing extends BaseModel {
+		- seatType: SeatType
+		- price: int
+	}
+
+	class Show extends BaseModel {
+		- screen: Screen
+		- movie: Movie
+		- startTime: LocalDateTime
+		- endTime: LocalDateTime
+		- feature: Feature
+		- pricingList : List<ShowPricing>
+	}
+
+	Show --> Feature
+	Show --> Screen
+	Show --> Movie
+	Show *-- ShowPricing : pricingList
+
+	enum Language {
+		ENGLISH, HINDI, MARATHI, TAMIL, TELUGU, SPANISH
+	}
+
+	class Movie extends BaseModel {
+		- name: String
+		- feature: Feature
+		- language: Language
+		- durationInMinutes: int
+	}
+
+	Movie --> Feature
+	Movie --> Language
+
+
+	class User extends BaseModel {
+		- name: String
+		- email: String
+		- address: Address
+	}
+
+	User --> Address
+
+	class Booking extends BaseModel {
+		- user: User
+		- show: Show
+		- showSeats: List<ShowSeat>
+	}
+
+	Booking --> User
+	Booking --> Show
+
+	enum ShowSeatStatus {
+	    AVAILABLE, LOCKED, BOOKED
+	}
+
+    class ShowSeat extends BaseModel {
+        - show: Show
+        - seat: Seat
+        - status: ShowSeatStatus
+    }
+
+	ShowSeat --> Show
+	ShowSeat --> Seat
+
+	Booking *-- ShowSeat : showSeats
+
+	class Ticket extends BaseModel {
+		- booking: Booking
+	}
+
+	Ticket --> Booking
+
+	enum PaymentStatus {
+		PAID, PENDING, FAILED
+	}
+
+	enum PaymentMode {
+		CASH, CARD, UPI, RAZORPAY
+	}
+
+	interface PaymentStrategy {
+		~ pay(booking: Booking)
+	}
+
+	class Payment extends BaseModel {
+		- ticket: Ticket
+		- status: PaymentStatus
+		- mode: PaymentMode
+		- strategy: PaymentStrategy
+		+ setStrategy(strategy: PaymentStrategy)
+	}
+
+	Payment --> Ticket
+	Payment --> PaymentStatus
+	Payment --> PaymentMode
+	Payment --> PaymentStrategy
+
+	class RazorpayPaymentStrategy implements PaymentStrategy {
+		~ pay(booking: Booking)
+	}
+
+	class Invoice {
+		- user: User
+		- totalAmount: int
+		- payment: Payment
+	}
+
+	Invoice --> User
+	Invoice --> Payment
+
+@enduml
